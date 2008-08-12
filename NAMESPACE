@@ -1,0 +1,5 @@
+# our back-end code
+useDynLib(rscproxy)
+
+# exported symbols from rscproxy
+export(as.matrix.rcomdata)
