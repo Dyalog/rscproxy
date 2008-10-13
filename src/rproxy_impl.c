@@ -110,8 +110,13 @@ static int R_Proxy_askyesnocancel (const char* pMsg)
 }
 #endif
 
+#if defined(__WINDOWS__)
+static int 
+R_Proxy_ReadConsole(const char *prompt,char *buf, int len, int addtohistory)
+#else
 static int 
 R_Proxy_ReadConsole(const char *prompt,unsigned char *buf, int len, int addtohistory)
+#endif
 {
   return 0;
 }
@@ -126,7 +131,7 @@ static void R_Proxy_WriteConsole(const char *buf, int len)
 #if !defined(__WINDOWS__)
 static void R_Proxy_WriteConsoleEx(const char* buf, int len, int something)
 {
-  return R_Proxy_WriteConsole(buf,len);
+  R_Proxy_WriteConsole(buf,len);
 }
 #endif
 
@@ -277,8 +282,8 @@ int R_Proxy_init (char const* pParameterString)
 
   snprintf(Rversion, 25, "%s.%s", R_MAJOR, R_MINOR);
   if(strncmp(getDLLVersion(), Rversion, 25) != 0) {
-    fprintf(stderr, "Error: R.DLL version does not match\n");
-    return SC_PROXY_ERR_UNKNOWN;
+    RPROXY_ERR(printf("Error: R.DLL version does not match\n"));
+    return SC_PROXY_ERR_INVALIDINTERPRETERVERSION;
   }
 #endif
 

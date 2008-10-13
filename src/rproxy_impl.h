@@ -36,6 +36,15 @@ extern "C" {
 #define R_USE_PROTOTYPES 0
 #include <R_ext/GraphicsEngine.h>
 
+/*
+*' 08-10-11 | TB | NewDevDesc renamed to DevDesc in R 2.8.0, will be removed in
+**                 2.9.0
+*/
+#if !defined(NewDevDesc)
+#  define NewDevDesc DevDesc
+#endif
+
+
 /* exported functions for implementation */
 
 /* 00-02-18 | baier | init() now receives parameter-string */

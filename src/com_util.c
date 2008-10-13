@@ -93,4 +93,6 @@ SEXP com_createSEXP(RCOM_OBJHANDLE handle)
   UNPROTECT(1);
   return sexp;
 }
+#else
+static int dummy = 0;
 #endif

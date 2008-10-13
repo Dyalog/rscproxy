@@ -325,12 +325,16 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
   return 0;
 }
 
-/* 05-05-24 | baier | VECSXP */
-/* 05-06-05 | baier | support for special values (R_NaN,...), generic vectors */
-/* 05-06-08 | baier | BDX_SPECIAL for scalars (REALSXP conversions) */
-/* 06-02-15 | baier | fixes for COM objects/EXTPTRSXP */
-/* 06-06-18 | baier | special values also for LOGICAL and INTEGER */
-/* 08-04-11 | baier | added BDX_DT and BDX_CY */
+/*
+** 05-05-24 | baier | VECSXP
+** 05-06-05 | baier | support for special values (R_NaN,...), generic vectors
+** 05-06-08 | baier | BDX_SPECIAL for scalars (REALSXP conversions)
+** 06-02-15 | baier | fixes for COM objects/EXTPTRSXP
+** 06-06-18 | baier | special values also for LOGICAL and INTEGER
+** 08-04-11 | baier | added BDX_DT and BDX_CY
+** 08-10-12 | baier | fixed Ticket#2, non-N/A values wrong for logical/integer
+**                    vectors
+*/
 int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
 {
   BDX_Data* lData;
@@ -586,7 +590,7 @@ int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
 	  if(lData->data.raw_data_with_type[i].raw_data.special_value ==
 	     BDX_SV_UNK) {
 	    lData->data.raw_data_with_type[i].type = BDX_BOOL;
-	    lData->data.raw_data_with_type[i].raw_data.double_value =
+	    lData->data.raw_data_with_type[i].raw_data.bool_value =
 	      LOGICAL(sexp)[i];
 	  }
 	}
@@ -599,8 +603,8 @@ int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
 	  if(lData->data.raw_data_with_type[i].raw_data.special_value ==
 	     BDX_SV_UNK) {
 	    lData->data.raw_data_with_type[i].type = BDX_INT;
-	    lData->data.raw_data_with_type[i].raw_data.double_value =
-	      LOGICAL(sexp)[i];
+	    lData->data.raw_data_with_type[i].raw_data.int_value =
+	      INTEGER(sexp)[i];
 	  }
 	}
 	break;

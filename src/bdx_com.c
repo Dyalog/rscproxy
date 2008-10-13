@@ -313,8 +313,9 @@ static int BDXScalar2Variant (BDX_Data* pBDXData,VARIANT* pVariantData)
     case BDX_HANDLE:
       {
 	LPSTREAM lStream = pBDXData->data.raw_data[0].ptr;
+	void* lTmpPtr = (void*) V_DISPATCH(pVariantData);
 	HRESULT lRc = CoUnmarshalInterface(lStream,&IID_IDispatch,
-					   (void**) &V_DISPATCH(pVariantData));
+					   &lTmpPtr);
 	if(FAILED(lRc)) {
 	  BDX_ERR(printf("unmarshalling stream ptr %08x failed with hr=%08x\n",
 			 lStream,lRc));
@@ -1891,4 +1892,6 @@ static SCODE getSCODEFromSpecialValue(unsigned long pSpecialVal)
     return 0x800a0000 | 2042;
   }
 }
+#else
+static int dummy = 0;
 #endif
