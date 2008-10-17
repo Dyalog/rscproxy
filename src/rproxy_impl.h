@@ -28,6 +28,7 @@ extern "C" {
 
 #include "bdx.h"
 
+#include <Rversion.h>
 #include <Rinternals.h>
   /*#include <Graphics.h>*/
   /*#include <Rdevices.h>*/
@@ -39,8 +40,9 @@ extern "C" {
 /*
 *' 08-10-11 | TB | NewDevDesc renamed to DevDesc in R 2.8.0, will be removed in
 **                 2.9.0
+** 08-10-17 | TB | no #define for R <= 2.8.0
 */
-#if !defined(NewDevDesc)
+#if (R_VERSION >= 133120) && !defined(NewDevDesc)
 #  define NewDevDesc DevDesc
 #endif
 
