@@ -1,6 +1,6 @@
 /*******************************************************************************
  *  BDX: Binary Data eXchange format library
- *  Copyright (C) 1999-2008 Thomas Baier, Erich Neuwirth
+ *  Copyright (C) 1999-2008 Thomas Baier
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -97,6 +97,7 @@ int __IsPOSIXct
 /* 08-04-11 | baier | added BDX_DT and BDX_CY */
 /* 08-06-05 | baier | fix class for BDX_DT */
 /* 08-06-06 | baier | set class symbol to "rcomdata" */
+/* 08-10-29 | baier | BDX_DT: protect-count, use CLS_NAME_POSIX[C]T */
 int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
 {
   SEXP lData = NULL;
@@ -158,6 +159,7 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
     {
       SEXP lClass;
       PROTECT(lClass = allocVector(STRSXP,2));
+      lProtectCount++;
       SET_STRING_ELT(lClass,0,mkChar(CLS_NAME_POSIXT));
       SET_STRING_ELT(lClass,1,mkChar(CLS_NAME_POSIXCT));
       classgets(lData,lClass);
@@ -275,8 +277,8 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
 	  SEXP lClass;
 	  PROTECT(lClass = allocVector(STRSXP,2));
 	  lProtectCount++;
-	  SET_STRING_ELT(lClass,0,mkChar("POSIXt"));
-	  SET_STRING_ELT(lClass,1,mkChar("POSIXct"));
+	  SET_STRING_ELT(lClass,0,mkChar(CLS_NAME_POSIXT));
+	  SET_STRING_ELT(lClass,1,mkChar(CLS_NAME_POSIXCT));
 	  classgets(lSEXP,lClass);
 	}
 	break;

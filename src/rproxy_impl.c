@@ -1,6 +1,6 @@
 /*******************************************************************************
  *  RProxy: Connector implementation between application and R language
- *  Copyright (C) 1999--2008 Thomas Baier, Erich Neuwirth
+ *  Copyright (C) 1999--2008 Thomas Baier
  *  Copyright 2006-8 R Development Core Team
  *
  *  R_Proxy_init based on rtest.c,  Copyright (C) 1998--2000

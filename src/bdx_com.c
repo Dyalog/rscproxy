@@ -1,6 +1,6 @@
 /*******************************************************************************
  *  BDX: Binary Data eXchange format library
- *  Copyright (C) 1999-2008 Thomas Baier, Erich Neuwirth
+ *  Copyright (C) 1999-2008 Thomas Baier
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -274,6 +274,7 @@ int WINAPI Variant2BDX (VARIANT VariantData,BDX_Data** ppBDXData)
 /* 05-05-20 | baier | BDX_SPECIAL, BDX_HANDLE */
 /* 06-02-15 | baier | fixes for COM objects/EXTPTRSXP */
 /* 08-04-11 | baier | added BDX_DT and BDX_CY */
+/* 08-10-29 | baier | BDX_HANDLE: fix initialization of V_DISPATCH */
 static int BDXScalar2Variant (BDX_Data* pBDXData,VARIANT* pVariantData)
 {
   int lRet = 0;
@@ -320,12 +321,14 @@ static int BDXScalar2Variant (BDX_Data* pBDXData,VARIANT* pVariantData)
 	  BDX_ERR(printf("unmarshalling stream ptr %08x failed with hr=%08x\n",
 			 lStream,lRc));
 	  return -1;
-	} else {
-	  BDX_ERR(printf("successfully marshalled COM interface\n"));
 	}
 
-	/* create SEXP for COM object */
+	/* init VARIANT object */
 	V_VT(pVariantData) = VT_DISPATCH;
+	V_DISPATCH(pVariantData) = lTmpPtr;
+
+	BDX_ERR(printf("successfully marshalled COM interface\n"));
+
 	break;
       }
     case BDX_SPECIAL:

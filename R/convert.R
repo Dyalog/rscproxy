@@ -1,7 +1,7 @@
 # 
 #  RSCProxy : Portable, easy-to-use implementation of C-style interface to R
 #             (StatConnector)
-#  Copyright (C) 2003-2008 Thomas Baier, Erich Neuwirth
+#  Copyright (C) 2003-2008 Thomas Baier
 #
 #  convert.R: public conversion functions (exported)
 # 
