@@ -1,22 +1,19 @@
 /*******************************************************************************
  *  RProxy: Connector implementation between application and R language
- *  Copyright (C) 1999--2008 Thomas Baier
+ *  Copyright (C) 1999--2009 Thomas Baier
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Library General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; version 2 of the License.
  *
- *  This library is distributed in the hope that it will be useful,
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Library General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU Library General Public
- *  License along with this library; if not, write to the Free
- *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- *  MA 02110-1301, USA.
- *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ******************************************************************************/
 
 #define NONAMELESSUNION
@@ -24,13 +21,9 @@
 #include <windows.h>
 #endif
 #include <stdio.h>
-/*#include <config.h>*/
 #include <Rversion.h>
 #include "bdx.h"
 #include "bdx_util.h"
-#if defined(__WINDOWS__)
-#include "bdx_com.h"
-#endif
 #include "SC_proxy.h"
 #include "rproxy.h"
 #include "rproxy_impl.h"
@@ -41,8 +34,8 @@
 /* static connector information */
 #define CONNECTOR_NAME          "R Statistics Interpreter Connector"
 #define CONNECTOR_DESCRIPTION   "Implements abstract connector interface to R"
-#define CONNECTOR_COPYRIGHT     "(C) 1999-2008, Thomas Baier"
-#define CONNECTOR_LICENSE       "GNU Library General Public License version 2 or greater"
+#define CONNECTOR_COPYRIGHT     "(C) 1999-2009, Thomas Baier"
+#define CONNECTOR_LICENSE       "GNU Library General Public License version 2"
 #define CONNECTOR_VERSION_MAJOR "1"
 #define CONNECTOR_VERSION_MINOR "0"
 
@@ -50,7 +43,7 @@
 #define INTERPRETER_NAME        "R"
 #define INTERPRETER_DESCRIPTION "A Computer Language for Statistical Data Analysis"
 #define INTERPRETER_COPYRIGHT   "(C) R Development Core Team"
-#define INTERPRETER_LICENSE     "GNU General Public License version 2 or greater"
+#define INTERPRETER_LICENSE     "GNU General Public License version 2"
 
 typedef enum
 {
@@ -113,7 +106,6 @@ int SYSCALL R_init (R_Proxy_Object_Impl* object,char const* parameters)
   }
 
   if(g_R_Proxy_init_parameters.reuseR) {
-    RPROXY_TRACE(printf("R_init: re-use R for proxy DLL (inproc RCOM)\n"));
     object->state = ps_reuser;
     return SC_PROXY_OK;
   }
@@ -589,10 +581,12 @@ BDX_Vtbl global_bdx_object_vtbl =
 {
   (BDX_FREE) bdx_free,
   (BDX_TRACE) bdx_trace
+#if 0
 #if defined(__WINDOWS__)
 ,
   (BDX_VARIANT2BDX) Variant2BDX,
   (BDX_BDX2VARIANT) BDX2Variant
+#endif
 #endif
 };
 

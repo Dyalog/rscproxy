@@ -1,21 +1,19 @@
 /*******************************************************************************
  *  BDX: Binary Data eXchange format library
- *  Copyright (C) 1999-2008 Thomas Baier
+ *  Copyright (C) 1999--2009 Thomas Baier
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Library General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- * 
- *  This library is distributed in the hope that it will be useful,
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; version 2 of the License.
+ *
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Library General Public License for more details.
- * 
- *  You should have received a copy of the GNU Library General Public
- *  License along with this library; if not, write to the Free
- *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- *  MA 02110-1301, USA.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *  Conversion functions from SEXP to BDX and vice versa.
  *
@@ -93,11 +91,14 @@ int __IsPOSIXct
 /* ==========================================================================
    Implementation
    ========================================================================== */
-/* 05-05-19 | baier | handle BDX_GENERIC */
-/* 08-04-11 | baier | added BDX_DT and BDX_CY */
-/* 08-06-05 | baier | fix class for BDX_DT */
-/* 08-06-06 | baier | set class symbol to "rcomdata" */
-/* 08-10-29 | baier | BDX_DT: protect-count, use CLS_NAME_POSIX[C]T */
+/*
+** 05-05-19 | baier | handle BDX_GENERIC
+** 08-04-11 | baier | added BDX_DT and BDX_CY
+** 08-06-05 | baier | fix class for BDX_DT
+** 08-06-06 | baier | set class symbol to "rcomdata"
+** 08-10-29 | baier | BDX_DT: protect-count, use CLS_NAME_POSIX[C]T
+** 09-02-14 | TB | BDX_NULL -> NILSXP
+*/
 int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
 {
   SEXP lData = NULL;
@@ -232,11 +233,21 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
     return -1;
 #endif
   case BDX_SPECIAL:
-    lData = PROTECT (allocVector (REALSXP,lTotalSize));
-    lProtectCount++;
-    for(i = 0;i < lTotalSize;i++) {
-      REAL(lData)[i] =
-	getDoubleFromSpecialValue(pBDXData->data.raw_data[i].special_value);
+    if((lTotalSize == 1)
+       && (pBDXData->data.raw_data[0].special_value == BDX_SV_NULL)) {
+      lData = PROTECT(allocVector(NILSXP,1));
+      lProtectCount++;
+    } else {
+      lData = PROTECT (allocVector (REALSXP,lTotalSize));
+      lProtectCount++;
+      for(i = 0;i < lTotalSize;i++) {
+	if(pBDXData->data.raw_data[i].special_value == BDX_SV_NULL) {
+	  BDX_ERR(printf("#1 BDX_SV_NULL: -> should be NILSXP is NA, total %d\n",
+			 lTotalSize));
+	}
+	REAL(lData)[i] =
+	  getDoubleFromSpecialValue(pBDXData->data.raw_data[i].special_value);
+      }
     }
     break;
   case BDX_GENERIC:
@@ -293,14 +304,22 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
         lSEXP = mkString(pBDXData->data.raw_data_with_type[i].raw_data.string_value);
 	break;
       case BDX_SPECIAL:
-	lSEXP = allocVector(REALSXP,1);
-	REAL(lSEXP)[0] =
-	  getDoubleFromSpecialValue(pBDXData->data.raw_data_with_type[i].raw_data.special_value);
+	if(pBDXData->data.raw_data_with_type[i].raw_data.special_value == BDX_SV_NULL) {
+	  lSEXP = allocVector(NILSXP,1);
+	} else {
+	  lSEXP = allocVector(REALSXP,1);
+	  REAL(lSEXP)[0] =
+	    getDoubleFromSpecialValue(pBDXData->data.raw_data_with_type[i].raw_data.special_value);
+	}
 	break;
       default:
+#if 1
+	lSEXP = allocVector(NILSXP,1);
+#else
 	lSEXP = allocVector(REALSXP,1);
 	REAL(lSEXP)[0] = 
 	  getDoubleFromSpecialValue(BDX_SV_NULL);
+#endif
 	BDX_ERR(printf("unknown BDX type %d in generic vector element %d, using NA\n",
 		       pBDXData->data.raw_data_with_type[i].type & BDX_SMASK,
 		       i));
@@ -817,6 +836,7 @@ static double getDoubleFromSpecialValue(unsigned long pSpecialValue)
 {
   switch(pSpecialValue) {
   case BDX_SV_NULL:
+    BDX_ERR(printf("getDoubleFromSpecialValue(BDX_SV_NULL)\n"));
   case BDX_SV_NA:
     /* NULL and NA both transform to NA */
     return R_NaReal;

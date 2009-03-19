@@ -1,27 +1,25 @@
 /*******************************************************************************
  *  RProxy: Connector implementation between application and R language
- *  Copyright (C) 1999--2008 Thomas Baier
+ *  Copyright (C) 1999--2009 Thomas Baier
  *  Copyright 2006-8 R Development Core Team
  *
  *  R_Proxy_init based on rtest.c,  Copyright (C) 1998--2000
  *                                  R Development Core Team
  *
+ *  Copyright (C) 2000--2009 Thomas Baier
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Library General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; version 2 of the License.
  *
- *  This library is distributed in the hope that it will be useful,
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Library General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU Library General Public
- *  License along with this library; if not, write to the Free
- *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- *  MA 02110-1301, USA.
- *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ******************************************************************************/
 
 #include "SC_system.h"
@@ -269,6 +267,7 @@ int R_Proxy_parse_parameters (char const* pParameterString,
   return 0;
 }
 
+
 /* 00-02-18 | baier | R_Proxy_init() now takes parameter string, parse it */
 /* 03-06-01 | baier | now we add %R_HOME%\bin to %PATH% */
 /* 06-06-18 | baier | parameter parsing enabled in parent function */
@@ -329,6 +328,14 @@ int R_Proxy_init (char const* pParameterString)
   R_SetParams(Rp);
   R_set_command_line_arguments(0, NULL);
 
+#if 1
+  {
+    /** 07-05-24 | TB | added --no-save as a temporary work-around */
+    char* argv[] = { "rproxy", "--silent", "--no-save" };
+    Rf_initEmbeddedR(3,argv);
+    /*    R_Interactive = FALSE; */
+  }
+#else
 #if defined(__WINDOWS__)
   GA_initapp(0, 0);
   readconsolecfg();
@@ -340,6 +347,7 @@ int R_Proxy_init (char const* pParameterString)
     Rf_initEmbeddedR(3,argv);
     /*    R_Interactive = FALSE; */
   }
+#endif
 #endif
   R_ReplDLLinit();
 #if !defined(__WINDOWS__)

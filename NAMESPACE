@@ -2,4 +2,4 @@
 useDynLib(rscproxy)
 
 # exported symbols from rscproxy
-export(as.matrix.rcomdata)
+export(as.matrix.rcomdata,as.data.frame.rcomdata)
