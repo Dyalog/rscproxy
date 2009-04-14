@@ -31,13 +31,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <Rembedded.h>
+
 /* static connector information */
-#define CONNECTOR_NAME          "R Statistics Interpreter Connector"
+#define CONNECTOR_NAME          "R Statistics Interpreter Connector (rscproxy)"
 #define CONNECTOR_DESCRIPTION   "Implements abstract connector interface to R"
 #define CONNECTOR_COPYRIGHT     "(C) 1999-2009, Thomas Baier"
 #define CONNECTOR_LICENSE       "GNU Library General Public License version 2"
 #define CONNECTOR_VERSION_MAJOR "1"
-#define CONNECTOR_VERSION_MINOR "0"
+#define CONNECTOR_VERSION_MINOR "3-0"
 
 /* interpreter information here at the moment until I know better... */
 #define INTERPRETER_NAME        "R"
@@ -392,11 +394,38 @@ int SYSCALL R_set_output_device (R_Proxy_Object_Impl* object,
   return SC_PROXY_OK;
 }
 
+/*
+** 09-04-08 | TB | exchange SC_INFO_MAIN_CONNECTOR and SC_INFO_MAIN_INTERPRETER
+*/
 int SYSCALL R_query_info (R_Proxy_Object_Impl* object,
 			  long main_key,
 			  long sub_key,
 			  char const** information)
 {
+  static int lsVersionInit = 0;
+#if defined(__WINDOWS__)
+  static char lsRVersionMajor[25];
+#else
+  static char* lsRVersionMajor;
+#endif
+  static char* lsRVersionMinor;
+
+  if(!lsVersionInit) {
+#if defined(__WINDOWS__)
+    lsVersionInit = 1;
+    strncpy(lsRVersionMajor,getDLLVersion(),sizeof(lsRVersionMajor));
+    lsRVersionMinor = strchr(lsRVersionMajor,'.');
+    if(!lsRVersionMinor) {
+      lsRVersionMinor = "";
+    } else {
+      *lsRVersionMinor = 0x0;
+      lsRVersionMinor++;
+    }
+#else
+    lsRVersionMajor = R_MAJOR;
+    lsRVersionMinor = R_MINOR;
+#endif
+  }
   if ((object == NULL)
       || (information == NULL))
     {
@@ -405,7 +434,7 @@ int SYSCALL R_query_info (R_Proxy_Object_Impl* object,
 
   switch (main_key)
     {
-    case SC_INFO_MAIN_CONNECTOR:
+    case SC_INFO_MAIN_INTERPRETER:
       switch (sub_key)
 	{
 	case SC_INFO_SUB_NAME:
@@ -421,16 +450,16 @@ int SYSCALL R_query_info (R_Proxy_Object_Impl* object,
 	  *information = INTERPRETER_LICENSE;
 	  break;
 	case SC_INFO_SUB_MINORVERSION:
-	  *information = R_MINOR;
+	  *information = lsRVersionMinor;
 	  break;
 	case SC_INFO_SUB_MAJORVERSION:
-	  *information = R_MAJOR;
+	  *information = lsRVersionMajor;
 	  break;
 	default:
 	  *information = "";
 	}
       break;
-    case SC_INFO_MAIN_INTERPRETER:
+    case SC_INFO_MAIN_CONNECTOR:
       switch (sub_key)
 	{
 	case SC_INFO_SUB_NAME:

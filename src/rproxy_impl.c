@@ -269,26 +269,58 @@ int R_Proxy_parse_parameters (char const* pParameterString,
 
 
 /* 00-02-18 | baier | R_Proxy_init() now takes parameter string, parse it */
-/* 03-06-01 | baier | now we add %R_HOME%\bin to %PATH% */
-/* 06-06-18 | baier | parameter parsing enabled in parent function */
+/*
+** 03-06-01 | baier | now we add %R_HOME%\bin to %PATH%
+** 06-06-18 | baier | parameter parsing enabled in parent function
+** 09-04-08 | baier | do not use Rf_InitEmbeddedR() on Windows, version check
+**                    does not check minor subversion (2.8.0 and 2.8.1 are
+**                    thought compatbile)
+*/
 int R_Proxy_init (char const* pParameterString)
 {
   structRstart rp;
   Rstart Rp = &rp;
-  char Rversion[25];
 #if defined(__WINDOWS__)
+  char lVersion[25];
+  char lDLLVersion[25];
   static char RHome[MAX_PATH];
 
-  snprintf(Rversion, 25, "%s.%s", R_MAJOR, R_MINOR);
-  if(strncmp(getDLLVersion(), Rversion, 25) != 0) {
-    RPROXY_ERR(printf("Error: R.DLL version does not match\n"));
+  int __strip_version(char* pVersion) {
+    char* lTmp;
+    lTmp = strchr(pVersion,'.');
+    if(!lTmp) {
+      /* something's wrong */
+      RPROXY_ERR(printf("rscproxy> __strip_version: \"%s\" returns -1\n",
+			pVersion));
+      return -1;
+    }
+    lTmp = strchr(lTmp,'.');
+    if(!lTmp) {
+      /* something's wrong */
+      RPROXY_ERR(printf("rscproxy> __strip_version: \"%s\" returns -2\n",
+			pVersion));
+      return -2;
+    }
+    *lTmp = 0x0;
+    return 0;
+  }
+  snprintf(lVersion,sizeof(lVersion),"%s.%s", R_MAJOR, R_MINOR);
+  strncpy(lDLLVersion,getDLLVersion(),sizeof(lDLLVersion));
+  /* cut after x.y (e.g. 2.8.0 and 2.8.1 get 2.8 */
+  if(__strip_version(lVersion) < 0) {
+    return SC_PROXY_ERR_UNKNOWN;
+  }
+  if(__strip_version(lDLLVersion) < 0) {
+    return SC_PROXY_ERR_UNKNOWN;
+  }
+  if(strncmp(lDLLVersion,lVersion,sizeof(lDLLVersion)) != 0) {
+    RPROXY_ERR(printf("rscproxy> R.DLL version is %s.%s, expected %s (%s!=%s)\n",
+		      R_MAJOR,R_MINOR,getDLLVersion(),lVersion,lDLLVersion));
     return SC_PROXY_ERR_INVALIDINTERPRETERVERSION;
   }
 #endif
 
   R_DefParams(Rp);
-
-  /* <FIXME> the documented interface is get_R_HOME() */
 
 #if defined(__WINDOWS__)
   /* first, try process-local environment space (CRT) */
@@ -328,14 +360,6 @@ int R_Proxy_init (char const* pParameterString)
   R_SetParams(Rp);
   R_set_command_line_arguments(0, NULL);
 
-#if 1
-  {
-    /** 07-05-24 | TB | added --no-save as a temporary work-around */
-    char* argv[] = { "rproxy", "--silent", "--no-save" };
-    Rf_initEmbeddedR(3,argv);
-    /*    R_Interactive = FALSE; */
-  }
-#else
 #if defined(__WINDOWS__)
   GA_initapp(0, 0);
   readconsolecfg();
@@ -347,7 +371,6 @@ int R_Proxy_init (char const* pParameterString)
     Rf_initEmbeddedR(3,argv);
     /*    R_Interactive = FALSE; */
   }
-#endif
 #endif
   R_ReplDLLinit();
 #if !defined(__WINDOWS__)
