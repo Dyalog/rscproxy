@@ -74,6 +74,7 @@ BDX_Data* SYSCALL bdx_alloc(void)
 /* 07-04-11 | baier | now SYSCALL */
 void SYSCALL bdx_free (struct _BDX_Data* data)
 {
+  /* BDX_TRACE(printf("bdx_free #1: %d\n",_heapchk())); Sleep(2000); */
   if (data == NULL) {
     return;
   }
@@ -85,6 +86,7 @@ void SYSCALL bdx_free (struct _BDX_Data* data)
    * be released using bdx_free() */
 
   /* is it a character array/vector/scalar? if yes, release the data */
+  /* BDX_TRACE(printf("bdx_free #2: %d\n",_heapchk())); Sleep(2000); */
   if(data->data.raw_data
      && (((data->type & BDX_SMASK) == BDX_STRING)
 	 || ((data->type & BDX_SMASK) == BDX_HANDLE)
@@ -136,10 +138,14 @@ void SYSCALL bdx_free (struct _BDX_Data* data)
     }
   }
   
+  /* BDX_TRACE(printf("bdx_free #3: %d\n",_heapchk())); Sleep(2000); */
   /* free data pointers, dimension data and the data block itself */
   if(data->data.raw_data) free(data->data.raw_data);
+  /* BDX_TRACE(printf("bdx_free #4: %d\n",_heapchk())); Sleep(2000); */
   if(data->dimensions) free(data->dimensions);
+  /* BDX_TRACE(printf("bdx_free #5: %d\n",_heapchk())); Sleep(2000); */
   free(data);
+  /* BDX_TRACE(printf("bdx_free #6: %d\n",_heapchk())); Sleep(2000); */
 }
 
 

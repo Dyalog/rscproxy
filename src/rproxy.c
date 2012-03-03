@@ -36,10 +36,10 @@
 /* static connector information */
 #define CONNECTOR_NAME          "R Statistics Interpreter Connector (rscproxy)"
 #define CONNECTOR_DESCRIPTION   "Implements abstract connector interface to R"
-#define CONNECTOR_COPYRIGHT     "(C) 1999-2009, Thomas Baier"
-#define CONNECTOR_LICENSE       "GNU Library General Public License version 2"
-#define CONNECTOR_VERSION_MAJOR "1"
-#define CONNECTOR_VERSION_MINOR "3-0"
+#define CONNECTOR_COPYRIGHT     "(C) 1998-2012, Thomas Baier"
+#define CONNECTOR_LICENSE       "GNU General Public License version 2"
+#define CONNECTOR_VERSION_MAJOR "2"
+#define CONNECTOR_VERSION_MINOR "0-1"
 
 /* interpreter information here at the moment until I know better... */
 #define INTERPRETER_NAME        "R"

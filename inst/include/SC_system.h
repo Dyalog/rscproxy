@@ -37,8 +37,15 @@ extern "C" {
 #define EXPORT
 
 /* entry points */
+#if defined(_WIN64)
+#define SC_PROXY_GET_OBJECT_FUN "SC_Proxy_get_object"
+#define BDX_GET_VTBL_FUN "BDX_get_vtbl"
+#define BDX_GET_VTBL2_FUN "BDX_get_vtbl2"
+#else
 #define SC_PROXY_GET_OBJECT_FUN "SC_Proxy_get_object@8"
-#define BDX_GET_VTBL_FUN "BDX_get_vtbl@8"
+#define BDX_GET_VTBL_FUN "_BDX_get_vtbl@8"
+#define BDX_GET_VTBL2_FUN "_BDX_get_vtbl2@20"
+#endif
 
 #else
 #define SYSCALL
@@ -47,6 +54,7 @@ extern "C" {
 /* entry points */
 #define SC_PROXY_GET_OBJECT_FUN "SC_Proxy_get_object"
 #define BDX_GET_VTBL_FUN "BDX_get_vtbl"
+#define BDX_GET_VTBL2_FUN "BDX_get_vtbl2"
 
 #endif
 

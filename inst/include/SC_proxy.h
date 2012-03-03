@@ -59,32 +59,55 @@ struct _SC_GraphicsDevice;
 #define SC_PROXY_ERR_INVALIDINTERPRETERVERSION 0x80000011
 
 /* type mask values */
-#define SC_TM_SCALAR_BOOL   (BDX_BOOL)
-#define SC_TM_SCALAR_INT    (BDX_INT)
-#define SC_TM_SCALAR_DOUBLE (BDX_DOUBLE)
-#define SC_TM_SCALAR_STRING (BDX_STRING)
+#define SC_TM_SCALAR_BOOL    (BDX_BOOL)
+#define SC_TM_SCALAR_INT     (BDX_INT)
+#define SC_TM_SCALAR_DOUBLE  (BDX_DOUBLE)
+#define SC_TM_SCALAR_STRING  (BDX_STRING)
+  /*#define SC_TM_SCALAR_DT      (BDX_DT)
+#define SC_TM_SCALAR_SPECIAL (BDX_SPECIAL)
+#define SC_TM_SCALAR_HANDLE  (BDX_HANDLE)
+#define SC_TM_SCALAR_POINTER (BDX_POINTER)*/
+
 #define SC_TM_SCALAR_ALL    (SC_TM_SCALAR_BOOL     \
                              | SC_TM_SCALAR_INT    \
                              | SC_TM_SCALAR_DOUBLE \
-                             | SC_TM_SCALAR_STRING)
+                             | SC_TM_SCALAR_STRING \
+                             /*| SC_TM_SCALAR_DT    \
+                             | SC_TM_SCALAR_SPECIAL \
+                             | SC_TM_SCALAR_HANDLE \
+                             | SC_TM_SCALAR_POINTER*/)	\
 
 #define SC_TM_ARRAY_BOOL    (BDX_BOOL << 8)
 #define SC_TM_ARRAY_INT     (BDX_INT << 8)
 #define SC_TM_ARRAY_DOUBLE  (BDX_DOUBLE << 8)
 #define SC_TM_ARRAY_STRING  (BDX_STRING << 8)
+  /*#define SC_TM_ARRAY_DT      (BDX_DT << 8)
+#define SC_TM_ARRAY_SPECIAL (BDX_SPECIAL << 8)
+#define SC_TM_ARRAY_HANDLE  (BDX_HANDLE << 8)
+#define SC_TM_ARRAY_POINTER (BDX_POINTER << 8)*/
 #define SC_TM_ARRAY_ALL     (SC_TM_ARRAY_BOOL     \
                              | SC_TM_ARRAY_INT    \
                              | SC_TM_ARRAY_DOUBLE \
-                             | SC_TM_ARRAY_STRING)
+                             | SC_TM_ARRAY_STRING \
+                             /*| SC_TM_ARRAY_DT		\
+			       | SC_TM_ARRAY_SPECIAL*/)
 
-#define SC_TM_VECTOR_BOOL   (BDX_BOOL << 12)
-#define SC_TM_VECTOR_INT    (BDX_INT << 12)
-#define SC_TM_VECTOR_DOUBLE (BDX_DOUBLE << 12)
-#define SC_TM_VECTOR_STRING (BDX_STRING << 12)
+
+#define SC_TM_VECTOR_BOOL    (BDX_BOOL << 16)
+#define SC_TM_VECTOR_INT     (BDX_INT << 16)
+#define SC_TM_VECTOR_DOUBLE  (BDX_DOUBLE << 16)
+#define SC_TM_VECTOR_STRING  (BDX_STRING << 16)
+  /*#define SC_TM_VECTOR_DT      (BDX_DT << 16)
+#define SC_TM_VECTOR_SPECIAL (BDX_SPECIAL << 16)
+#define SC_TM_VECTOR_HANDLE  (BDX_HANDLE << 16)
+#define SC_TM_VECTOR_POINTER (BDX_POINTER << 16)*/
+
 #define SC_TM_VECTOR_ALL    (SC_TM_VECTOR_BOOL     \
                              | SC_TM_VECTOR_INT    \
                              | SC_TM_VECTOR_DOUBLE \
-                             | SC_TM_VECTOR_STRING)
+                             | SC_TM_VECTOR_STRING \
+                             /*| SC_TM_VECTOR_DT	\
+			       | SC_TM_VECTOR_SPECIAL*/)
 
 /* information main keys */
 #define SC_INFO_MAIN_CONNECTOR     1

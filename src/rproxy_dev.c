@@ -381,7 +381,7 @@ static double R_Proxy_Graphics_StrWidth_CB(char* pString,
 				      lSize);
   }
   
-  MessageBox (GetDesktopWindow (),"StrWidth()","R_Proxy_Graphics",MB_OK);
+  OutputDebugString("StrWidth() without device");
   return 0.0;
 }
 
@@ -456,6 +456,8 @@ int R_Proxy_Graphics_Driver_CB(R_Proxy_Graphics_CB* pDD,
   DEVDESC(pDD)->startfill = R_TRANWHITE;
   DEVDESC(pDD)->startlty = LTY_SOLID;
   DEVDESC(pDD)->startgamma = 1;
+
+  OutputDebugString("R_Proxy_Graphics_Driver_CB()\n");
 
   /* init the device-specific functionality here */
   DEVDESC(pDD)->deviceSpecific = (void *) NULL;

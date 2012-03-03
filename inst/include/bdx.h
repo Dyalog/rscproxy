@@ -33,8 +33,9 @@ extern "C" {
  * 1 ... first version, never set
  * 2 ... removed magic, added version, changed data type defines
  * 3 ... added generic data type, special symbols (N/A, ERROR), objects
+ * 4 ... data frame support
  */
-#define BDX_VERSION 3
+#define BDX_VERSION 4
 
 /*
  * Vtbl version information:
@@ -69,6 +70,7 @@ extern "C" {
 /* 04-03-02 | baier | BDX_LIST new, BDX_CMASK extended, removed BDX_VECTOR */
 #define BDX_SCALAR 0x00010000
 #define BDX_ARRAY  0x00020000
+#define BDX_DF     0x00040000
 /* #define BDX_VECTOR 0x00040000 */
 #define BDX_LIST   0x00080000
 #define BDX_CMASK  0x000f0000
@@ -99,6 +101,7 @@ extern "C" {
 #define BDX_SV_NAN  0x00000003 /* NAN (not a number) */
 #define BDX_SV_INF  0x00000004 /* +Inf */
 #define BDX_SV_NINF 0x00000005 /* -Inf */
+#define BDX_SV_MNDF 0x10000000 /* magic number for data frame */
 #define BDX_SV_UNK  0xffffffff /* unknown code */
 
 typedef long BDX_Dimension;
@@ -177,7 +180,7 @@ typedef struct _BDX_Vtbl2 BDX_Vtbl;
 
 /* entry point: retrieve a proxy object with a given version */
 typedef int (SYSCALL* BDX_GET_VTBL) (BDX_Vtbl**,unsigned long);
-
+typedef int (SYSCALL* BDX_GET_VTBL2) (BSTR pConnector,BSTR pLicensee,BDX_Vtbl**,unsigned long,BSTR pPath);
 
 #else
 

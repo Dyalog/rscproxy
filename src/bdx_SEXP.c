@@ -35,8 +35,15 @@
 #include <string.h>
 #include <stdlib.h>
 
+#if 1
+#define DF_TRACE(x)
+#else
+#define DF_TRACE(x) BDX_TRACE(x)
+#endif
+
 #define CLS_NAME_POSIXT "POSIXt"
 #define CLS_NAME_POSIXCT "POSIXct"
+#define CLS_NAME_DATAFRAME "data.frame"
 
 /*
  * prototypes for internal helper functions
@@ -49,6 +56,7 @@ static int EXTPTRSXP2LPSTREAM(RCOM_OBJHANDLE pHandle,
 static unsigned long getSpecialValueFromInteger(int pSEXPVal);
 static unsigned long getSpecialValueFromDouble(double pSEXPVal);
 static double getDoubleFromSpecialValue(unsigned long pSpecialValue);
+static int setRawDataWithTypeFromSEXP(BDX_RawDataWithType* pRawData,SEXP pSEXP,int pIndex);
 
 #define BDX_DM_DEFAULT    0UL
 #define BDX_DM_UNDEFINED  ((unsigned long) -1)
@@ -97,7 +105,7 @@ int __IsPOSIXct
 ** 08-06-05 | baier | fix class for BDX_DT
 ** 08-06-06 | baier | set class symbol to "rcomdata"
 ** 08-10-29 | baier | BDX_DT: protect-count, use CLS_NAME_POSIX[C]T
-** 09-02-14 | TB | BDX_NULL -> NILSXP
+** 09-02-14 | baier | BDX_NULL -> NILSXP
 */
 int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
 {
@@ -134,6 +142,8 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
     lData = PROTECT(allocVector(LGLSXP,lTotalSize));
     lProtectCount++;
     for(i = 0;i < lTotalSize;i++) {
+      /*      BDX_TRACE(printf("BDX2SEXP: bool array, element %d is %d\n",i,
+	      pBDXData->data.raw_data[i].bool_value));*/
       LOGICAL(lData)[i] = pBDXData->data.raw_data[i].bool_value;
     }
     break;
@@ -156,6 +166,11 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
     lProtectCount++;
     for(i = 0;i < lTotalSize;i++) {
       REAL(lData)[i] = pBDXData->data.raw_data[i].dt_value;
+#if 0
+      BDX_TRACE(printf("BDX2SEXP: BDX_DT date at index %d, numeric value %g\n",
+		       i,
+		       pBDXData->data.raw_data[i].dt_value));
+#endif
     }
     {
       SEXP lClass;
@@ -241,10 +256,12 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
       lData = PROTECT (allocVector (REALSXP,lTotalSize));
       lProtectCount++;
       for(i = 0;i < lTotalSize;i++) {
+#if 0
 	if(pBDXData->data.raw_data[i].special_value == BDX_SV_NULL) {
 	  BDX_ERR(printf("#1 BDX_SV_NULL: -> should be NILSXP is NA, total %d\n",
 			 lTotalSize));
 	}
+#endif
 	REAL(lData)[i] =
 	  getDoubleFromSpecialValue(pBDXData->data.raw_data[i].special_value);
       }
@@ -284,6 +301,11 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
 	lSEXP = allocVector(REALSXP,1);
 	REAL(lSEXP)[0] =
 	  pBDXData->data.raw_data_with_type[i].raw_data.dt_value;
+#if 0
+	BDX_TRACE(printf("BDX2SEXP: GENERIC date at index %d, numeric value %g\n",
+			 i,
+			 pBDXData->data.raw_data_with_type[i].raw_data.dt_value));
+#endif
 	{
 	  SEXP lClass;
 	  PROTECT(lClass = allocVector(STRSXP,2));
@@ -355,6 +377,8 @@ int BDX2SEXP(BDX_Data const* pBDXData,SEXP* pSEXPData)
 ** 08-04-11 | baier | added BDX_DT and BDX_CY
 ** 08-10-12 | baier | fixed Ticket#2, non-N/A values wrong for logical/integer
 **                    vectors
+** 09-10-01 | baier | N/A handled wrong for non-REAL (logical/integer) scalars
+** 12-03-03 | baier | data frame support
 */
 int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
 {
@@ -362,14 +386,17 @@ int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
   SEXP lDimension;
   int lTotalSize = 1;
   int i;
+  int j;
   int lGeneric = 0;
   SEXP sexp = (SEXP) pSexp; /* to get rid of const/non-const warning */
   double lDoubleValue;
   int lLogicalValue;
   int lIntegerValue;
+  int lDataFrame = 0; /* 12-03-03 | baier | data frame support */
+  int lRowCount = -1;
 
   assert(ppBDXData != NULL);
-
+  
   *ppBDXData = 0;
   lData = bdx_alloc();
 
@@ -398,6 +425,47 @@ int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
     BDX_ERR(printf("SEXP2BDX: SEXP has length 0\n"));
     bdx_free(lData);
     return -6;
+  }
+
+  /* 12-03-03 | baier | data frame support */
+  {
+    SEXP lClass;
+
+    PROTECT(lClass = getAttrib(sexp,R_ClassSymbol));
+    if((lClass != R_NilValue)
+       && (TYPEOF(sexp) == VECSXP)) {
+      /* check, if data.frame is one of the classes */
+      for(i = 0;i < length(lClass);i++) {
+	if(strcmp(CHAR(STRING_ELT(lClass,i)),CLS_NAME_DATAFRAME) == 0) {
+	  lDataFrame = 1;
+	}
+      }
+      if(lDataFrame) {
+	/* get row count AND test all columns */
+	for (i = 0;i < LENGTH(sexp);i++) {
+	  if(lRowCount < 0) {
+	    lRowCount = LENGTH(VECTOR_ELT(sexp,i));
+	  } else {
+	    if(lRowCount != LENGTH(VECTOR_ELT(sexp,i))) {
+	      DF_TRACE(printf("SEXP2BDX: data frame found, column %d has %d rows, should have %d\n",
+			      i,LENGTH(VECTOR_ELT(sexp,i)),lRowCount));
+	      UNPROTECT(1);
+	      return -6;
+	    }
+	  }
+	}
+      }
+      DF_TRACE(printf("SEXP2BDX: data frame found, %d columns, %d rows\n",
+		      LENGTH(sexp),lRowCount));
+      /* data frame contains c SEXPs for c columns, each having r rows,
+       * column names in R_NamesSymbol ("names"),
+       * row names in R_RowNamesSymbol ("row.names")
+       *
+       * data goes to the BDX array (BDX_GENERIC), first row and first column contain
+       * column and row names. (0/0) is empty. data goes into rest of matrix
+       */
+    }
+    UNPROTECT(1);
   }
 
   /*
@@ -429,7 +497,7 @@ int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
     lData->type |= BDX_STRING;
     break;
   case VECSXP:
-    /* generic vectors */
+    /* generic vectors, this is also for data frames */
     lData->type |= BDX_GENERIC;
     lGeneric = 1;
     break;
@@ -459,12 +527,21 @@ int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
     }
     /* lData->data.raw_data = (BDX_RawData*) malloc(sizeof(BDX_RawData)); */
   } else if((LENGTH(sexp) == 1) 
-	    || (TYPEOF(sexp) == EXTPTRSXP)){
+	    || (TYPEOF(sexp) == EXTPTRSXP)
+	    || (TYPEOF(sexp) == NILSXP)){
     /* scalar */
     lData->type |= BDX_SCALAR;
     lData->dim_count = 1;
     lData->dimensions = (BDX_Dimension*) malloc(sizeof(BDX_Dimension));
     lData->dimensions[0] = 1;
+  } else if(lDataFrame) {
+    /* 12-03-03 | baier | data frame support */
+    lData->type |= BDX_DF;
+    lData->dim_count = 2;
+    lData->dimensions = (BDX_Dimension*) calloc(2,sizeof(BDX_Dimension));
+    lData->dimensions[0] = lRowCount + 1;    /* row names, even if empty */
+    lData->dimensions[1] = LENGTH(sexp) + 1; /* column names, even if empty */
+    lTotalSize = lData->dimensions[0] * lData->dimensions[1];
   } else if(TYPEOF(lDimension) == NILSXP) {
     /* no DIM atribute -> vector (== one-dimensional array) */
     lData->type |= BDX_ARRAY;
@@ -585,19 +662,31 @@ int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
     }
   }
 
-  /* VECSXP or REALSXP with special values */
+  /* VECSXP or REALSXP with special values or data frames */
   if(lGeneric) {
-    if(lData->data.raw_data) {
-      /* memory has been allocated */
-      free(lData->data.raw_data);
-    }
     if((lData->type & BDX_CMASK) == BDX_SCALAR) {
       /* scalar BDX_SPECIAL */
       lData->type = (lData->type & ~BDX_SMASK) | BDX_SPECIAL;
-      lData->data.raw_data[0].special_value =
-	getSpecialValueFromDouble(REAL(sexp)[0]);
+      switch(TYPEOF(sexp)) {
+      case LGLSXP:
+	lData->data.raw_data[0].special_value =
+	  getSpecialValueFromLogical(LOGICAL(sexp)[0]);
+	break;
+      case INTSXP:
+	lData->data.raw_data[0].special_value =
+	  getSpecialValueFromLogical(INTEGER(sexp)[0]);
+	break;
+      case REALSXP:
+      default:
+	lData->data.raw_data[0].special_value =
+	  getSpecialValueFromDouble(REAL(sexp)[0]);
+      }
     } else {
       /* BDX_GENERIC */
+      if(lData->data.raw_data) {
+	/* memory has been allocated and will be reallocated */
+	free(lData->data.raw_data);
+      }
       lData->type = (lData->type & ~BDX_SMASK) | BDX_GENERIC;
       lData->data.raw_data_with_type =
 	(BDX_RawDataWithType*) calloc(lTotalSize,
@@ -657,96 +746,215 @@ int SEXP2BDX(struct SEXPREC const* pSexp,BDX_Data** ppBDXData)
 	}
 	break;
       default:
-	for(i = 0;i < lTotalSize;i++) {
-	  SEXP lElementSexp = VECTOR_ELT(sexp,i);
-	  switch(TYPEOF(lElementSexp)) {
-	  case NILSXP:
-	    lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
-	    lData->data.raw_data_with_type[i].raw_data.special_value = BDX_SV_NULL;
-	    break;
-	  case LGLSXP:
-	    lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
-	    lData->data.raw_data_with_type[i].raw_data.special_value =
-	      getSpecialValueFromLogical(LOGICAL(lElementSexp)[0]);
-	    if(lData->data.raw_data_with_type[i].raw_data.special_value == BDX_SV_UNK) {
-	      lData->data.raw_data_with_type[i].type = BDX_BOOL;
-	      lData->data.raw_data_with_type[i].raw_data.bool_value =
-		LOGICAL(lElementSexp)[0];
+	/* 12-03-03 | baier | data frame support */
+	if(lDataFrame) {
+	  SEXP lNames;
+
+	  /* data frame marker */
+	  lData->data.raw_data_with_type[0].type = BDX_SPECIAL;
+	  lData->data.raw_data_with_type[0].raw_data.special_value = BDX_SV_MNDF;
+
+	  /* column names */
+	  PROTECT(lNames = getAttrib (sexp,R_NamesSymbol));
+	  DF_TRACE(printf("R_NamesSymbol: %08x, length=%d, type=%d\n",
+			  lNames,LENGTH(lNames),TYPEOF(lNames)));
+	  if((lNames == R_NilValue)
+	     || (LENGTH(lNames) != (lData->dimensions[1] - 1))) {
+	    lNames = R_NilValue;
+	  }
+	  for(i = 1;i < lData->dimensions[1];i++) {
+	    if(lNames != R_NilValue) {
+	      setRawDataWithTypeFromSEXP(&(lData->data.raw_data_with_type[i * lData->dimensions[0]]),
+					 lNames,i-1);
+	    } else {
+	      lData->data.raw_data_with_type[i * lData->dimensions[0]].type = BDX_SPECIAL;
+	      lData->data.raw_data_with_type[i * lData->dimensions[0]].raw_data.special_value = BDX_SV_NULL;
 	    }
-	    break;
-	  case INTSXP:
-	    lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
-	    lData->data.raw_data_with_type[i].raw_data.special_value =
-	      getSpecialValueFromInteger(INTEGER(lElementSexp)[0]);
-	    if(lData->data.raw_data_with_type[i].raw_data.special_value == BDX_SV_UNK) {
-	      lData->data.raw_data_with_type[i].type = BDX_INT;
-	      lData->data.raw_data_with_type[i].raw_data.int_value =
-		INTEGER(lElementSexp)[0];
+	  }
+	  UNPROTECT(1);
+
+	  /* row names */
+	  PROTECT(lNames = getAttrib (sexp,R_RowNamesSymbol)); /* get and validate them */
+	  DF_TRACE(printf("R_RowNamesSymbol: %08x, length=%d, type=%d\n",
+			  lNames,LENGTH(lNames),TYPEOF(lNames)));
+	  if((lNames == R_NilValue)
+	     || (LENGTH(lNames) != (lData->dimensions[0] - 1))) {
+	    lNames = R_NilValue;
+	  }
+	  for(i = 1;i < lData->dimensions[0];i++) {
+	    /* if there are row names, use them */
+	    if(lNames != R_NilValue) {
+	      setRawDataWithTypeFromSEXP(&(lData->data.raw_data_with_type[i]),
+					 lNames,i-1);
+	    } else {
+	      lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
+	      lData->data.raw_data_with_type[i].raw_data.special_value = BDX_SV_NULL;
 	    }
-	    break;
-	  case REALSXP:
-	    lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
-	    lData->data.raw_data_with_type[i].raw_data.special_value =
-	      getSpecialValueFromDouble(REAL(lElementSexp)[0]);
-	    if(lData->data.raw_data_with_type[i].raw_data.special_value == BDX_SV_UNK) {
-	      if(__IsPOSIXct(lElementSexp)) {
-		lData->data.raw_data_with_type[i].type = BDX_DT;
-		lData->data.raw_data_with_type[i].raw_data.dt_value =
-		  REAL(lElementSexp)[0];
-	      } else {
-		lData->data.raw_data_with_type[i].type = BDX_DOUBLE;
-		lData->data.raw_data_with_type[i].raw_data.double_value =
-		  REAL(lElementSexp)[0];
+	  }
+	  UNPROTECT(1);
+
+	  for(i = 1;i < lData->dimensions[1];i++) {
+	    SEXP lColumn = VECTOR_ELT(sexp,i-1);
+
+	    /* depending on the column data type, fill the data */
+	    DF_TRACE(printf("SEXP2BDX: SEXP type %d in dataframe column %d (of %d)\n",
+			    TYPEOF(lColumn),i,lData->dimensions[1]));
+	    switch(TYPEOF(lColumn)) {
+	    case NILSXP:
+	      for(j = 1;j < lData->dimensions[0];j++) {
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_SPECIAL;
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.special_value = BDX_SV_NULL;
 	      }
+	      break;
+	    case LGLSXP:
+	      for(j = 1;j < lData->dimensions[0];j++) {
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_SPECIAL;
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.special_value =
+		  getSpecialValueFromLogical(LOGICAL(lColumn)[j -1]);
+		if(lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.special_value == BDX_SV_UNK) {
+		  lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_BOOL;
+		  lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.bool_value =
+		    LOGICAL(lColumn)[j-1];
+		}
+	      }
+	      break;
+	    case INTSXP:
+	      for(j = 1;j < lData->dimensions[0];j++) {
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_SPECIAL;
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.special_value =
+		  getSpecialValueFromInteger(INTEGER(lColumn)[j -1]);
+		if(lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.special_value == BDX_SV_UNK) {
+		  lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_INT;
+		  lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.int_value =
+		    INTEGER(lColumn)[j-1];
+		}
+	      }
+	      break;
+	    case REALSXP:
+	      for(j = 1;j < lData->dimensions[0];j++) {
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_SPECIAL;
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.special_value =
+		  getSpecialValueFromDouble(REAL(lColumn)[j -1]);
+		if(lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.special_value == BDX_SV_UNK) {
+		  if(__IsPOSIXct(lColumn)) {
+		    lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_DT;
+		    lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.dt_value =
+		      REAL(lColumn)[j-1];
+		  } else {
+		    lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_DOUBLE;
+		    lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.double_value =
+		      REAL(lColumn)[j-1];
+		  }
+		}
+	      }
+	      break;
+	    case STRSXP:
+	      for(j = 1;j < lData->dimensions[0];j++) {
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].type = BDX_STRING;
+		lData->data.raw_data_with_type[i * lData->dimensions[0] + j].raw_data.string_value =
+		  strdup(CHAR(STRING_ELT(lColumn,j-1)));
+	      }
+	      break;
+	    default:
+	      bdx_free(lData);
+	      BDX_TRACE(printf("SEXP2BDX: unsupported SEXP type %d in dataframe column %d\n",
+			       TYPEOF(lColumn),i));
+	      return -6;
 	    }
-	    break;
-	  case EXTPTRSXP:
+	  }
+	  DF_TRACE(printf("SEXP2BDX: done with data frame\n"));
+	} else {
+	  for(i = 0;i < lTotalSize;i++) {
+	    SEXP lElementSexp = VECTOR_ELT(sexp,i);
+	    switch(TYPEOF(lElementSexp)) {
+	    case NILSXP:
+	      lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
+	      lData->data.raw_data_with_type[i].raw_data.special_value = BDX_SV_NULL;
+	      break;
+	    case LGLSXP:
+	      lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
+	      lData->data.raw_data_with_type[i].raw_data.special_value =
+		getSpecialValueFromLogical(LOGICAL(lElementSexp)[0]);
+	      if(lData->data.raw_data_with_type[i].raw_data.special_value == BDX_SV_UNK) {
+		lData->data.raw_data_with_type[i].type = BDX_BOOL;
+		lData->data.raw_data_with_type[i].raw_data.bool_value =
+		  LOGICAL(lElementSexp)[0];
+	      }
+	      break;
+	    case INTSXP:
+	      lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
+	      lData->data.raw_data_with_type[i].raw_data.special_value =
+		getSpecialValueFromInteger(INTEGER(lElementSexp)[0]);
+	      if(lData->data.raw_data_with_type[i].raw_data.special_value == BDX_SV_UNK) {
+		lData->data.raw_data_with_type[i].type = BDX_INT;
+		lData->data.raw_data_with_type[i].raw_data.int_value =
+		  INTEGER(lElementSexp)[0];
+	      }
+	      break;
+	    case REALSXP:
+	      lData->data.raw_data_with_type[i].type = BDX_SPECIAL;
+	      lData->data.raw_data_with_type[i].raw_data.special_value =
+		getSpecialValueFromDouble(REAL(lElementSexp)[0]);
+	      if(lData->data.raw_data_with_type[i].raw_data.special_value == BDX_SV_UNK) {
+		if(__IsPOSIXct(lElementSexp)) {
+		  lData->data.raw_data_with_type[i].type = BDX_DT;
+		  lData->data.raw_data_with_type[i].raw_data.dt_value =
+		    REAL(lElementSexp)[0];
+		} else {
+		  lData->data.raw_data_with_type[i].type = BDX_DOUBLE;
+		  lData->data.raw_data_with_type[i].raw_data.double_value =
+		    REAL(lElementSexp)[0];
+		}
+	      }
+	      break;
+	    case EXTPTRSXP:
 #if defined(__WINDOWS__)
-	    lData->data.raw_data_with_type[i].type = BDX_HANDLE;
-	    /*
-	     * according to BDR (mail on r-devel, 05-10-24) an EXTPTRSXP is not
-	     * a vector, therefore LENGTH() does not work
-	     */
-	    lTotalSize = 1; 
-	    /* no EXTPTRSXP for arrays */
-	    {
-	      /* is it a COM object? */
-	      RCOM_OBJHANDLE lHandle = com_getHandle(lElementSexp);
-	      LPSTREAM lStream = NULL;
-	      int lRc = EXTPTRSXP2LPSTREAM(lHandle,&lStream); /* 0 for success */
-	      /* COM object is marshalled into stream
-	       *
-	       * 1. stream object holds reference to IDispatch
-	       * 2. reference count is increased in the meanwhile
-	       * 3. must use CoGetInterfaceAndReleaseStream() to unmarshal
-	       * 4. Release() must be called on object afterwards
+	      lData->data.raw_data_with_type[i].type = BDX_HANDLE;
+	      /*
+	       * according to BDR (mail on r-devel, 05-10-24) an EXTPTRSXP is not
+	       * a vector, therefore LENGTH() does not work
 	       */
-	      if (lRc == 0) {
-		/* we don't support generic pointers */
-		lData->data.raw_data_with_type[i].raw_data.ptr = lStream;
-		lData->type |= BDX_HANDLE;
-	      } else {
-		lData->type |= BDX_POINTER;
-		lData->data.raw_data_with_type[i].raw_data.ptr =
-		  NULL; /* NULL pointer */
-		BDX_TRACE(printf("SEXP2BDX: error %d marshalling COM object at index %d\n",
-				 lRc,i));
+	      lTotalSize = 1; 
+	      /* no EXTPTRSXP for arrays */
+	      {
+		/* is it a COM object? */
+		RCOM_OBJHANDLE lHandle = com_getHandle(lElementSexp);
+		LPSTREAM lStream = NULL;
+		int lRc = EXTPTRSXP2LPSTREAM(lHandle,&lStream); /* 0 for success */
+		/* COM object is marshalled into stream
+		 *
+		 * 1. stream object holds reference to IDispatch
+		 * 2. reference count is increased in the meanwhile
+		 * 3. must use CoGetInterfaceAndReleaseStream() to unmarshal
+		 * 4. Release() must be called on object afterwards
+		 */
+		if (lRc == 0) {
+		  /* we don't support generic pointers */
+		  lData->data.raw_data_with_type[i].raw_data.ptr = lStream;
+		  lData->type |= BDX_HANDLE;
+		} else {
+		  lData->type |= BDX_POINTER;
+		  lData->data.raw_data_with_type[i].raw_data.ptr =
+		    NULL; /* NULL pointer */
+		  BDX_TRACE(printf("SEXP2BDX: error %d marshalling COM object at index %d\n",
+				   lRc,i));
+		}
 	      }
-	    }
 #else
-	    return -6;
+	      return -6;
 #endif
-	    break;
-	  case STRSXP:
-	    lData->data.raw_data_with_type[i].type = BDX_STRING;
-	    lData->data.raw_data_with_type[i].raw_data.string_value =
-	      strdup(CHAR(STRING_ELT(lElementSexp,0)));
-	    break;
-	  default:
-	    bdx_free(lData);
-	    BDX_TRACE(printf("SEXP2BDX: unsupported SEXP type %d in VECSXP element %d\n",
-			     TYPEOF(lElementSexp),i));
-	    return -6;
+	      break;
+	    case STRSXP:
+	      lData->data.raw_data_with_type[i].type = BDX_STRING;
+	      lData->data.raw_data_with_type[i].raw_data.string_value =
+		strdup(CHAR(STRING_ELT(lElementSexp,0)));
+	      break;
+	    default:
+	      bdx_free(lData);
+	      BDX_TRACE(printf("SEXP2BDX: unsupported SEXP type %d in VECSXP element %d\n",
+			       TYPEOF(lElementSexp),i));
+	      return -6;
+	    }
 	  }
 	}
       }
@@ -832,11 +1040,66 @@ static unsigned long getSpecialValueFromInteger(int pSEXPVal)
   }
   return BDX_SV_UNK;
 }
+static int setRawDataWithTypeFromSEXP(BDX_RawDataWithType* pRawData,SEXP pSEXP,int pIndex)
+{
+  switch(TYPEOF(pSEXP)) {
+  case NILSXP:
+    pRawData->type = BDX_SPECIAL;
+    pRawData->raw_data.special_value = BDX_SV_NULL;
+    break;
+  case LGLSXP:
+    pRawData->type = BDX_SPECIAL;
+    pRawData->raw_data.special_value =
+      getSpecialValueFromLogical(LOGICAL(pSEXP)[pIndex]);
+    if(pRawData->raw_data.special_value == BDX_SV_UNK) {
+      pRawData->type = BDX_BOOL;
+      pRawData->raw_data.bool_value =
+	LOGICAL(pSEXP)[pIndex];
+    }
+    break;
+  case INTSXP:
+    pRawData->type = BDX_SPECIAL;
+    pRawData->raw_data.special_value =
+      getSpecialValueFromInteger(INTEGER(pSEXP)[pIndex]);
+    if(pRawData->raw_data.special_value == BDX_SV_UNK) {
+      pRawData->type = BDX_INT;
+      pRawData->raw_data.int_value =
+	INTEGER(pSEXP)[pIndex];
+    }
+    break;
+  case REALSXP:
+    pRawData->type = BDX_SPECIAL;
+    pRawData->raw_data.special_value =
+      getSpecialValueFromDouble(REAL(pSEXP)[pIndex]);
+    if(pRawData->raw_data.special_value == BDX_SV_UNK) {
+      if(__IsPOSIXct(pSEXP)) {
+	pRawData->type = BDX_DT;
+	pRawData->raw_data.dt_value =
+	  REAL(pSEXP)[pIndex];
+      } else {
+	pRawData->type = BDX_DOUBLE;
+	pRawData->raw_data.double_value =
+	  REAL(pSEXP)[pIndex];
+      }
+    }
+    break;
+  case STRSXP:
+    pRawData->type = BDX_STRING;
+    pRawData->raw_data.string_value =
+      strdup(CHAR(STRING_ELT(pSEXP,pIndex)));
+    break;
+  default:
+    BDX_TRACE(printf("setRawDataWithTypeFromSEXP: unsupported SEXP type %d\n",
+		     TYPEOF(pSEXP)));
+    return -1;
+  }
+  return 0;
+}
+
 static double getDoubleFromSpecialValue(unsigned long pSpecialValue)
 {
   switch(pSpecialValue) {
   case BDX_SV_NULL:
-    BDX_ERR(printf("getDoubleFromSpecialValue(BDX_SV_NULL)\n"));
   case BDX_SV_NA:
     /* NULL and NA both transform to NA */
     return R_NaReal;
