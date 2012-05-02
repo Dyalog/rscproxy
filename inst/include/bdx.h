@@ -180,7 +180,9 @@ typedef struct _BDX_Vtbl2 BDX_Vtbl;
 
 /* entry point: retrieve a proxy object with a given version */
 typedef int (SYSCALL* BDX_GET_VTBL) (BDX_Vtbl**,unsigned long);
+#if defined(__WINDOWS__)
 typedef int (SYSCALL* BDX_GET_VTBL2) (BSTR pConnector,BSTR pLicensee,BDX_Vtbl**,unsigned long,BSTR pPath);
+#endif
 
 #else
 

@@ -76,6 +76,7 @@ int R_Proxy_Graphics_Driver (pDevDesc pDD,
 extern SC_CharacterDevice* __output_device;
 
 /* trace to DebugView */
+/* 12-05-02 | baier | removed printf() on !__WINDOWS__ */
 int R_Proxy_printf(char const* pFormat,...)
 {
   static char __tracebuf[TRCBUFSIZE];
@@ -86,7 +87,13 @@ int R_Proxy_printf(char const* pFormat,...)
 #if defined(__WINDOWS__)
   OutputDebugString(__tracebuf);
 #else
+#if 0
+  /*
+   * removed, because R packages must not write to stdout: 
+   * Mail KH, 2012-05-02, 11:58
+   */
   printf("%s",__tracebuf);
+#endif
 #endif
   return 0;
 }

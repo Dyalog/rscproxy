@@ -1,10 +1,10 @@
-4c2c69b21a8f22ffb8577c4c63d829cd *DESCRIPTION
+ba6f39435c64f3d3c9657285d0e73504 *DESCRIPTION
 57a3c93b6f5d0ac216e80a010eed2881 *NAMESPACE
 9e125a5ab09cab930950f85872e81fcc *R/convert.R
 8ff55395155b7571532b8bfdbc2997c6 *R/rscproxy-internal.R
 e07e2a89c288f714e53c3c0857a5d7e0 *inst/include/SC_proxy.h
 e96964e9bda7974448b10ed10b73f348 *inst/include/SC_system.h
-0cd78d63c9217a4aa4c9b8f060655b1c *inst/include/bdx.h
+7bc6a5e7ae1c52fa4a7fc82b1512d922 *inst/include/bdx.h
 d85acfaf74dec7a73b5c585dc94cca83 *inst/include/bdx_SEXP.h
 be851c6f1cd76ca4d6d5310a04c33103 *inst/include/bdx_util.h
 f633410c4d84cf03c704f29b120f9464 *inst/include/com_util.h
@@ -15,9 +15,9 @@ f5fa5dbb251f1409cc12c8310c946c01 *man/rscproxy-internal.Rd
 fe75326f20b1a3bcf358061f8ca182b5 *src/Makevars
 b50b1f9fc236d2f3512152d0054cddb3 *src/Makevars.win
 fd20d38d4aa6e0b4ae688eb588211035 *src/bdx_SEXP.c
-f513925624ceab8e4fd562d571aa2213 *src/bdx_util.c
+6533d8688bfcf7f722c00ada0c765096 *src/bdx_util.c
 c9457de900486e8a4a4f7422b69079e0 *src/com_util.c
 4929ab0808dc098d5474668162830e0f *src/rproxy.c
-bd83c70df0ca9c2822ef4493d09732f0 *src/rproxy_dev.c
-f51678d7e7d5de343e005183e9228636 *src/rproxy_impl.c
+91337bf1db82b0e302ba767a1256a2e1 *src/rproxy_dev.c
+126ac78f58bd119b8c4d2480bf408cef *src/rproxy_impl.c
 06ecc5fa499a7a2680cc1e1b783d12b3 *src/rproxy_impl.h

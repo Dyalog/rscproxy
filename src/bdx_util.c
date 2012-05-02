@@ -48,7 +48,13 @@ int bdx_trace_printf(char const* pFormat,...)
 #if defined(__WINDOWS__)
   OutputDebugString(__tracebuf);
 #else
+#if 0
+  /*
+   * removed, because R packages must not write to stdout: 
+   * Mail KH, 2012-05-02, 11:58
+   */
   printf("%s",__tracebuf);
+#endif
 #endif
   return 0;
 }
