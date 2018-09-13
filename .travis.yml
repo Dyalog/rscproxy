@@ -4,3 +4,7 @@ cache: packages
 os:
   - linux
   - osx
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then R CMD build . ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then R CMD install --build . ; fi
+  - R CMD check *tar.gz
