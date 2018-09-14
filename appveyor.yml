@@ -28,8 +28,11 @@ on_failure:
   - appveyor PushArtifact failure.zip
 
 artifacts:
-  - path: '\*_*.tar.gz'
   - path: '\*_*.zip'
+    name: 'Binary package for Windows'
+
+  - path: '\*_*.tar.gz'
+    name: 'Source package for Linux macOS etc'
 
 deploy:
   description: 'Release description'
