@@ -32,6 +32,7 @@ artifacts:
   - path: '\*_*.tar.gz'
 
 deploy:
+  tag: $(APPVEYOR_BUILD_VERSION)
   release: $(APPVEYOR_PROJECT_NAME) 2.0-5 build $(APPVEYOR_BUILD_VERSION)
   description: |
     For Windows use the binary package *.zip
