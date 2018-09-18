@@ -1,7 +1,7 @@
-# rscproxy
-
 [![Travis Build Status](https://travis-ci.org/jayfoad/rscproxy.svg?branch=master)](https://travis-ci.org/jayfoad/rscproxy)
 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/github/jayfoad/rscproxy?branch=master&svg=true)](https://ci.appveyor.com/project/jayfoad/rscproxy)
+
+# rscproxy
 
 This is a clone of the R package rscproxy, built and packaged for use with Dyalog APL's [R interface](http://docs.dyalog.com/17.0/R%20Interface%20Guide.pdf).
 
