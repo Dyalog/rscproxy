@@ -4,7 +4,6 @@ cache: packages
 os: osx
 script:
 - R CMD install --build .
-- R CMD check *.tgz
 deploy:
   provider: releases
   api_key:
