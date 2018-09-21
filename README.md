@@ -1,5 +1,5 @@
-[![Travis Build Status](https://travis-ci.org/Dyalog/rscproxy.svg?branch=master)](https://travis-ci.org/dyalog/rscproxy)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/github/JasonDyalog/rscproxy?branch=master&svg=true)](https://ci.appveyor.com/project/dyalog/rscproxy)
+[![Travis Build Status](https://travis-ci.org/Dyalog/rscproxy.svg?branch=master)](https://travis-ci.org/Dyalog/rscproxy)
+[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/github/JasonDyalog/rscproxy?branch=master&svg=true)](https://ci.appveyor.com/project/JasonDyalog/rscproxy)
 
 # rscproxy
 
