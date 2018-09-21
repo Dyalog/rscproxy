@@ -31,9 +31,6 @@ artifacts:
 
 deploy:
   tag: $(APPVEYOR_REPO_TAG_NAME)
-  description: |
-    For Windows use the binary package *.zip
-    For Linux, macOS etc use the source package *.tar.gz
   provider: GitHub
   auth_token:
     secure: pKFQcZzVwheg7szIOxarbFnWzJbQjP70xjYY/n9x/bm9byQ8vYVgPiQfFSQfW4Lc
