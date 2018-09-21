@@ -1,5 +1,5 @@
-[![Travis Build Status](https://travis-ci.org/jayfoad/rscproxy.svg?branch=master)](https://travis-ci.org/jayfoad/rscproxy)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/github/jayfoad/rscproxy?branch=master&svg=true)](https://ci.appveyor.com/project/jayfoad/rscproxy)
+[![Travis Build Status](https://travis-ci.org/dyalog/rscproxy.svg?branch=master)](https://travis-ci.org/dyalog/rscproxy)
+[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/github/dyalog/rscproxy?branch=master&svg=true)](https://ci.appveyor.com/project/dyalog/rscproxy)
 
 # rscproxy
 
@@ -7,7 +7,7 @@ This is a clone of the R package rscproxy, built and packaged for use with Dyalo
 
 ## Installation
 
-1. Go to this repository's [releases](https://github.com/jayfoad/rscproxy/releases/latest) page and choose an appropriate package:
+1. Go to this repository's [releases](https://github.com/dyalog/rscproxy/releases/latest) page and choose an appropriate package:
    1. For Windows choose the Windows binary package `rscproxy*.zip`.
    2. For macOS choose the macOS binary package `rscproxy*.tgz`.
    3. For Linux and other operating systems choose the source package `rscproxy*.tar.gz`.
@@ -16,7 +16,7 @@ This is a clone of the R package rscproxy, built and packaged for use with Dyalo
 
 ## Information for developers
 
-We use continuous integration: [AppVeyor](https://www.appveyor.com/) builds the source package and Windows binary package, and [Travis](https://travis-ci.org/) builds the macOS binary package. Every commit to `master` triggers a build, but only tagged builds are deployed to the [releases](https://github.com/jayfoad/rscproxy/releases/latest) page.
+We use continuous integration: [AppVeyor](https://www.appveyor.com/) builds the source package and Windows binary package, and [Travis](https://travis-ci.org/) builds the macOS binary package. Every commit to `master` triggers a build, but only tagged builds are deployed to the [releases](https://github.com/dyalog/rscproxy/releases/latest) page.
 
 The usual workflow for creating a new release is:
 1. Use the github web UI to "Draft a new release". You can copy most of the information from the previous release. Increment the build number in the tag and the title. When you click "Publish release" the new git tag will be created. At first this new release will only have the standard "Source code" assets.

@@ -7,10 +7,10 @@ script:
 deploy:
   provider: releases
   api_key:
-    secure: r7/tgJeFg1pYozKLo08tLi4KL/1Wwn+//F/AARVij5SZIAf45CsSpux16+s6WwmxIstP/ijKIEqJxOZU88IF8CX2vEDdvtE21SzoFuGwOWTCHbfinGnVajOlKrawbhX1vin7QA0378gGJv1KAzExgG1n5yGvlG98zeyjQ2F3kbvK7RJnVpUji0KSRTQuZkYq4TPaqu+q5gdbqCrKvSOuTvsNy5/IHZLqqAq7/ZQHHyjpbNJ4tEKuJobThG7AopiUVZYHwyiXmNvtpsNcAp5Mq7WfGWLk9L/Ll0egF2JA6+A+S9E6HYet9tZSa54TUh+H49rFGg6siQjnId7FKUPsIRvWdSWMYVFhFYncCXq1WovsCU7Pa2mXpQjap6Ce6wOYPzWfUV+YAHzRqiZ7ncjUfkVIGyYRhAisPJgI+WKw21+faS4IAOq22WkyGjxOjEcRDnuBFWSFpwl1209d7sxzl0Qv53V2ezYNDjJgtidB/k3Q9+EYZuFt03btELim+oJJ260ZCQbTlO4zENphhaeqS5V+8H7vi9r0fNPuTHILfqBg57i1x0ysHPLdL10//Y+RhqL/s3AnE6XNzS9LvnbaHnK1v7x0zLdgkld7S2bylSUJZ0ldIKupVf0Ht06PPYSRK+FA3tWETBem/Y5tmVdGW2Jh12ZPzgZeu/04mTMBAfo=
+    secure: xxx
   file_glob: true
   file: "*.tgz"
   skip_cleanup: true
   on:
     tags: true
-    repo: jayfoad/rscproxy
+    repo: dyalog/rscproxy
