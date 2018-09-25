@@ -32,6 +32,7 @@
 
 #if !defined(__WINDOWS__)
 #define R_INTERFACE_PTRS 1
+#define CSTACK_DEFNS
 #endif
 #if 1
 #include <Rembedded.h>
@@ -375,7 +376,15 @@ int R_Proxy_init (char const* pParameterString)
   {
     /** 07-05-24 | TB | added --no-save as a temporary work-around */
     char* argv[] = { "rproxy", "--silent", "--no-save" };
-    Rf_initEmbeddedR(3,argv);
+    // The following lines are the source of Rf_initEmbeddedR.
+    // We want to disable stack checking because Dyalog APL runs on a child thread.
+    // We disable it by setting R_CStackLimit to -1.
+    // R_CSTackLimit must be set AFTER Rf_initialize_R, but BEFORE anything else
+    // so we must "inline" Rf_initEmbeddedR here.
+    Rf_initialize_R(3, argv);
+    R_CStackLimit = (uintptr_t)-1;
+    R_Interactive = TRUE;  /* Rf_initialize_R set this based on isatty */
+    setup_Rmainloop();
     /*    R_Interactive = FALSE; */
   }
 #endif
