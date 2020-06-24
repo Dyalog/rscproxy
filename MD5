@@ -1,4 +1,4 @@
-ba6f39435c64f3d3c9657285d0e73504 *DESCRIPTION
+5e37debbd30af9fe430884fb6d5dbdf0 *DESCRIPTION
 57a3c93b6f5d0ac216e80a010eed2881 *NAMESPACE
 9e125a5ab09cab930950f85872e81fcc *R/convert.R
 8ff55395155b7571532b8bfdbc2997c6 *R/rscproxy-internal.R
@@ -14,7 +14,7 @@ b5677fd2b6b1331a100cf137e68b94e9 *man/as.data.frame.rcomdata.Rd
 f5fa5dbb251f1409cc12c8310c946c01 *man/rscproxy-internal.Rd
 fe75326f20b1a3bcf358061f8ca182b5 *src/Makevars
 b50b1f9fc236d2f3512152d0054cddb3 *src/Makevars.win
-fd20d38d4aa6e0b4ae688eb588211035 *src/bdx_SEXP.c
+842778127d99ed73700892f70ae3c2c2 *src/bdx_SEXP.c
 6533d8688bfcf7f722c00ada0c765096 *src/bdx_util.c
 c9457de900486e8a4a4f7422b69079e0 *src/com_util.c
 4929ab0808dc098d5474668162830e0f *src/rproxy.c
