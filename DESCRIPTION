@@ -3,13 +3,13 @@ Type: Package
 Title: statconn: provides portable C-style interface to R
         (StatConnector)
 Version: 2.0-6
-Date: 2012-05-02
+Date: 2020-06-24
 Author: Thomas Baier
-Maintainer: Thomas Baier <thomas@statconn.com>
+Maintainer: Thomas Baier <thomas@statconn.com>, Ron Murray <ronald_murray@hotmail.com>
 Description: rscproxy library provides an interface to R used by third
         party applications, most notable, but not limited to,
         statconnDCOM, ROOo and other systems.
 License: GPL-2
-Packaged: 2012-05-02 13:04:14 UTC; thomas
+Packaged: 2020-06-24 13:04:14 UTC; ron
 Repository: CRAN
 Date/Publication: 2012-05-02 13:22:04

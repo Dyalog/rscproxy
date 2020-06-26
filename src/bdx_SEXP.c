@@ -421,9 +421,9 @@ int SEXP2BDX(struct SEXPREC const *pSexp, BDX_Data **ppBDXData)
   int lDataFrame = 0; /* 12-03-03 | baier | data frame support */
   int lRowCount = -1;
 
-  static const int SupportedTypes = 0 | (1 << NILSXP) | (1 << LGLSXP) | (1 << INTSXP) | (1 << REALSXP) | (1 << EXTPTRXSP) | (1 << STRSXP) | (1 << VECSXP);
-
   assert(ppBDXData != NULL);
+
+  static const int SupportedTypes = 0 | (1 << NILSXP) | (1 << LGLSXP) | (1 << INTSXP) | (1 << REALSXP) | (1 << EXTPTRSXP) | (1 << STRSXP) | (1 << VECSXP);
 
   *ppBDXData = 0;
   lData = bdx_alloc();
